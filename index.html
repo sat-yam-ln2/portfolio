@@ -316,6 +316,257 @@
         </footer>
     </section>
 
+    <!-- Mission Control Analytics Dashboard -->
+    <button id="mission-control-btn" class="mission-control-btn">
+        <i data-lucide="zap"></i>
+        <span>STATS</span>
+    </button>
+
+    <div id="mission-control-panel" class="mission-control-panel">
+        <div class="panel-header">
+            <h2>MISSION CONTROL</h2>
+            <div class="panel-controls">
+                <button id="minimize-panel" class="panel-btn" title="Minimize">
+                    <i data-lucide="minus"></i>
+                </button>
+                <button id="close-panel" class="panel-btn" title="Close">
+                    <i data-lucide="x"></i>
+                </button>
+            </div>
+        </div>
+
+        <div class="panel-tabs">
+            <button class="panel-tab active" data-tab="site">SITE</button>
+            <button class="panel-tab" data-tab="space">SPACE</button>
+            <button class="panel-tab" data-tab="live">LIVE</button>
+        </div>
+
+        <div class="panel-content">
+            <!-- Site Metrics Tab -->
+            <div id="tab-site" class="tab-content active">
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i data-lucide="users"></i>
+                        <span>VISITORS</span>
+                    </div>
+                    <div class="metric-value" id="visitor-count">0</div>
+                    <div class="metric-trend" id="visitor-trend">
+                        <span class="trend-arrow">+</span>
+                        <span id="today-visitors">0</span> today
+                    </div>
+                    <div class="sparkline" id="visitor-sparkline"></div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i data-lucide="clock"></i>
+                        <span>AVG SESSION</span>
+                    </div>
+                    <div class="metric-value" id="avg-session">0m 0s</div>
+                    <div class="progress-bar">
+                        <div class="progress-fill" id="session-progress"></div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i data-lucide="target"></i>
+                        <span>POPULAR SECTIONS</span>
+                    </div>
+                    <div class="section-bars" id="section-bars">
+                        <div class="section-bar">
+                            <span class="section-name">Hero</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" data-section="hero"></div>
+                            </div>
+                            <span class="bar-percent">0%</span>
+                        </div>
+                        <div class="section-bar">
+                            <span class="section-name">Philosophy</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" data-section="philosophy"></div>
+                            </div>
+                            <span class="bar-percent">0%</span>
+                        </div>
+                        <div class="section-bar">
+                            <span class="section-name">Research</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" data-section="research"></div>
+                            </div>
+                            <span class="bar-percent">0%</span>
+                        </div>
+                        <div class="section-bar">
+                            <span class="section-name">Contact</span>
+                            <div class="bar-container">
+                                <div class="bar-fill" data-section="contact"></div>
+                            </div>
+                            <span class="bar-percent">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i data-lucide="scroll"></i>
+                        <span>EXPLORATION DEPTH</span>
+                    </div>
+                    <div class="scroll-depth-container">
+                        <div class="scroll-track">
+                            <div class="scroll-fill" id="scroll-fill"></div>
+                            <div class="scroll-rocket" id="scroll-rocket">^</div>
+                        </div>
+                        <span class="scroll-percent" id="scroll-percent">0%</span>
+                    </div>
+                    <div class="scroll-message" id="scroll-message">Start exploring!</div>
+                </div>
+
+                <div class="metric-card">
+                    <div class="metric-header">
+                        <i data-lucide="lock"></i>
+                        <span>SECRETS DISCOVERED</span>
+                    </div>
+                    <div class="easter-eggs-container" id="easter-eggs">
+                        <!-- Filled by JS -->
+                    </div>
+                    <div class="eggs-count" id="eggs-count">0 / 6 unlocked</div>
+                </div>
+            </div>
+
+            <!-- Space Data Tab -->
+            <div id="tab-space" class="tab-content">
+                <div class="metric-card space-card">
+                    <div class="metric-header">
+                        <i data-lucide="satellite"></i>
+                        <span>ISS TRACKER</span>
+                    </div>
+                    <div class="iss-data">
+                        <div class="iss-coords">
+                            <div class="coord-row">
+                                <span class="coord-label">LAT:</span>
+                                <span class="coord-value" id="iss-lat">--</span>
+                            </div>
+                            <div class="coord-row">
+                                <span class="coord-label">LON:</span>
+                                <span class="coord-value" id="iss-lon">--</span>
+                            </div>
+                        </div>
+                        <div class="iss-stats">
+                            <div class="iss-stat">
+                                <span class="stat-label">Altitude</span>
+                                <span class="stat-value">408 km</span>
+                            </div>
+                            <div class="iss-stat">
+                                <span class="stat-label">Velocity</span>
+                                <span class="stat-value">27,600 km/h</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card space-card">
+                    <div class="metric-header">
+                        <i data-lucide="rocket"></i>
+                        <span>NEXT SPACEX LAUNCH</span>
+                    </div>
+                    <div class="launch-data">
+                        <div class="launch-name" id="launch-name">Loading...</div>
+                        <div class="launch-countdown" id="launch-countdown">T-minus --:--:--</div>
+                        <div class="launch-progress">
+                            <div class="launch-progress-fill" id="launch-progress"></div>
+                        </div>
+                        <div class="launch-details">
+                            <span id="launch-site">--</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card space-card">
+                    <div class="metric-header">
+                        <i data-lucide="image"></i>
+                        <span>NASA APOD</span>
+                    </div>
+                    <div class="apod-container">
+                        <div class="apod-image" id="apod-image">
+                            <div class="apod-placeholder">Loading...</div>
+                        </div>
+                        <div class="apod-title" id="apod-title">--</div>
+                        <button class="apod-btn" id="apod-view">View Full</button>
+                    </div>
+                </div>
+
+                <div class="metric-card space-card">
+                    <div class="metric-header">
+                        <i data-lucide="cloud-sun"></i>
+                        <span>LOCAL CONDITIONS</span>
+                    </div>
+                    <div class="weather-data">
+                        <div class="weather-location">Kathmandu</div>
+                        <div class="weather-temp" id="weather-temp">--</div>
+                        <div class="weather-desc" id="weather-desc">--</div>
+                        <div class="sun-times">
+                            <span id="sunrise">Sunrise: --</span>
+                            <span id="sunset">Sunset: --</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="metric-card space-card">
+                    <div class="metric-header">
+                        <i data-lucide="clock"></i>
+                        <span>TIME SYNC</span>
+                    </div>
+                    <div class="time-zones">
+                        <div class="time-zone">
+                            <span class="tz-label">NPT</span>
+                            <span class="tz-value" id="time-npt">--:--:--</span>
+                        </div>
+                        <div class="time-zone">
+                            <span class="tz-label">UTC</span>
+                            <span class="tz-value" id="time-utc">--:--:--</span>
+                        </div>
+                        <div class="time-zone">
+                            <span class="tz-label">EST</span>
+                            <span class="tz-value" id="time-est">--:--:--</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Live Feed Tab -->
+            <div id="tab-live" class="tab-content">
+                <div class="activity-feed" id="activity-feed">
+                    <div class="activity-header">RECENT ACTIVITY</div>
+                    <div class="activity-list" id="activity-list">
+                        <!-- Filled by JS -->
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <div class="panel-footer">
+            <button class="footer-btn" id="export-data" title="Export Data">
+                <i data-lucide="download"></i>
+            </button>
+            <button class="footer-btn" id="reset-stats" title="Reset Stats">
+                <i data-lucide="refresh-cw"></i>
+            </button>
+        </div>
+    </div>
+
+    <!-- APOD Modal -->
+    <div id="apod-modal" class="apod-modal">
+        <div class="apod-modal-content">
+            <button class="apod-modal-close" id="apod-modal-close">
+                <i data-lucide="x"></i>
+            </button>
+            <img id="apod-modal-img" src="" alt="NASA APOD">
+            <div class="apod-modal-info">
+                <h3 id="apod-modal-title"></h3>
+                <p id="apod-modal-desc"></p>
+            </div>
+        </div>
+    </div>
+
     <!-- Scripts -->
     <script src="script.js"></script>
     <script>

@@ -9,6 +9,8 @@ document.addEventListener('DOMContentLoaded', () => {
     initSkillsConstellation();
     initEasterEggs();
     initOrbitalPhilosophy();
+    initMissionControl();
+    initAnalytics();
 });
 
 // --- Starfield Animation ---
@@ -38,7 +40,7 @@ function initStarfield() {
         }
 
         getRandomColor() {
-            const colors = ['#ffffff', '#E8EDF2', '#00F0FF', '#FFB627'];
+            const colors = ['#ffffff', '#e0e0e0', '#cccccc', '#b0b0b0'];
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -120,7 +122,7 @@ function initStarfield() {
     function drawConstellations() {
         // Connect stars that are close to each other
         ctx.lineWidth = 0.2;
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.15)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.15)';
 
         for (let i = 0; i < stars.length; i++) {
             for (let j = i + 1; j < stars.length; j++) {
@@ -505,7 +507,7 @@ function initSkillsConstellation() {
         }
 
         draw() {
-            ctx.fillStyle = '#00F0FF';
+            ctx.fillStyle = '#ffffff';
             ctx.beginPath();
             ctx.arc(this.x, this.y, this.radius, 0, Math.PI * 2);
             ctx.fill();
@@ -520,7 +522,7 @@ function initSkillsConstellation() {
         ctx.clearRect(0, 0, canvas.width, canvas.height);
 
         // Draw connections
-        ctx.strokeStyle = 'rgba(0, 240, 255, 0.1)';
+        ctx.strokeStyle = 'rgba(255, 255, 255, 0.1)';
         ctx.lineWidth = 1;
 
         for (let i = 0; i < nodes.length; i++) {
@@ -778,7 +780,7 @@ function initOrbitalPhilosophy() {
         }
 
         getRandomColor() {
-            const colors = ['#00F0FF', '#FF6B35', '#B537F2', '#FFB627'];
+            const colors = ['#ffffff', '#e0e0e0', '#cccccc', '#b0b0b0'];
             return colors[Math.floor(Math.random() * colors.length)];
         }
 
@@ -830,7 +832,7 @@ function initOrbitalPhilosophy() {
                     ctx.beginPath();
                     ctx.moveTo(particles[i].x, particles[i].y);
                     ctx.lineTo(particles[j].x, particles[j].y);
-                    ctx.strokeStyle = `rgba(0, 240, 255, ${0.1 * (1 - distance / 80)})`;
+                    ctx.strokeStyle = `rgba(255, 255, 255, ${0.1 * (1 - distance / 80)})`;
                     ctx.lineWidth = 0.5;
                     ctx.stroke();
                 }
@@ -845,7 +847,7 @@ function initOrbitalPhilosophy() {
                 ctx.beginPath();
                 ctx.moveTo(particles[i].x, particles[i].y);
                 ctx.lineTo(centerX, centerY);
-                ctx.strokeStyle = `rgba(0, 240, 255, ${0.15 * (1 - distCenter / 100)})`;
+                ctx.strokeStyle = `rgba(255, 255, 255, ${0.15 * (1 - distCenter / 100)})`;
                 ctx.lineWidth = 1;
                 ctx.stroke();
             }
@@ -872,4 +874,581 @@ function initOrbitalPhilosophy() {
 
     // Handle resize
     window.addEventListener('resize', resizeCanvas);
+}
+
+// ===== MISSION CONTROL ANALYTICS DASHBOARD =====
+
+// Analytics Storage
+const ANALYTICS_KEY = 'portfolio_analytics';
+const SPACE_CACHE_KEY = 'portfolio_space_cache';
+
+function getAnalytics() {
+    const stored = localStorage.getItem(ANALYTICS_KEY);
+    if (stored) {
+        return JSON.parse(stored);
+    }
+    return {
+        visits: 0,
+        dailyVisits: {},
+        lastVisit: null,
+        sessionTimes: [],
+        currentSessionStart: null,
+        sectionsViewed: {
+            hero: 0,
+            philosophy: 0,
+            research: 0,
+            education: 0,
+            contact: 0
+        },
+        easterEggsFound: [],
+        maxScrollDepth: 0,
+        activityLog: []
+    };
+}
+
+function saveAnalytics(data) {
+    localStorage.setItem(ANALYTICS_KEY, JSON.stringify(data));
+}
+
+function getSpaceCache() {
+    const stored = localStorage.getItem(SPACE_CACHE_KEY);
+    if (stored) {
+        return JSON.parse(stored);
+    }
+    return {
+        apod: null,
+        apodDate: null,
+        launch: null,
+        launchFetched: null
+    };
+}
+
+function saveSpaceCache(data) {
+    localStorage.setItem(SPACE_CACHE_KEY, JSON.stringify(data));
+}
+
+// Initialize Analytics Tracking
+function initAnalytics() {
+    const analytics = getAnalytics();
+    
+    // Increment visit count
+    const today = new Date().toISOString().split('T')[0];
+    if (analytics.lastVisit !== today) {
+        analytics.visits++;
+        analytics.dailyVisits[today] = (analytics.dailyVisits[today] || 0) + 1;
+    }
+    analytics.lastVisit = today;
+    analytics.currentSessionStart = Date.now();
+    
+    // Log activity
+    addActivity('visit', 'New session started');
+    
+    saveAnalytics(analytics);
+    
+    // Track section views with Intersection Observer
+    trackSectionViews();
+    
+    // Track scroll depth
+    trackScrollDepth();
+    
+    // Save session time on page unload
+    window.addEventListener('beforeunload', () => {
+        const analytics = getAnalytics();
+        if (analytics.currentSessionStart) {
+            const sessionTime = Math.floor((Date.now() - analytics.currentSessionStart) / 1000);
+            analytics.sessionTimes.push(sessionTime);
+            // Keep only last 20 sessions
+            if (analytics.sessionTimes.length > 20) {
+                analytics.sessionTimes.shift();
+            }
+            saveAnalytics(analytics);
+        }
+    });
+}
+
+function trackSectionViews() {
+    const sections = document.querySelectorAll('section[id]');
+    
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                const analytics = getAnalytics();
+                const sectionId = entry.target.id;
+                if (analytics.sectionsViewed[sectionId] !== undefined) {
+                    analytics.sectionsViewed[sectionId]++;
+                    saveAnalytics(analytics);
+                }
+            }
+        });
+    }, { threshold: 0.3 });
+    
+    sections.forEach(section => observer.observe(section));
+}
+
+function trackScrollDepth() {
+    let maxScroll = 0;
+    
+    window.addEventListener('scroll', () => {
+        const scrollHeight = document.documentElement.scrollHeight - window.innerHeight;
+        const scrollPercent = Math.round((window.scrollY / scrollHeight) * 100);
+        
+        if (scrollPercent > maxScroll) {
+            maxScroll = scrollPercent;
+            const analytics = getAnalytics();
+            analytics.maxScrollDepth = Math.max(analytics.maxScrollDepth, scrollPercent);
+            saveAnalytics(analytics);
+        }
+    });
+}
+
+function addActivity(type, text) {
+    const analytics = getAnalytics();
+    const activity = {
+        type,
+        text,
+        timestamp: Date.now()
+    };
+    analytics.activityLog.unshift(activity);
+    // Keep only last 50 activities
+    if (analytics.activityLog.length > 50) {
+        analytics.activityLog.pop();
+    }
+    saveAnalytics(analytics);
+}
+
+function recordEasterEgg(eggId) {
+    const analytics = getAnalytics();
+    if (!analytics.easterEggsFound.includes(eggId)) {
+        analytics.easterEggsFound.push(eggId);
+        saveAnalytics(analytics);
+        addActivity('easter', 'Easter egg #' + eggId + ' discovered!');
+    }
+}
+
+// Mission Control Panel
+function initMissionControl() {
+    const btn = document.getElementById('mission-control-btn');
+    const panel = document.getElementById('mission-control-panel');
+    const closeBtn = document.getElementById('close-panel');
+    const minimizeBtn = document.getElementById('minimize-panel');
+    const tabs = document.querySelectorAll('.panel-tab');
+    const tabContents = document.querySelectorAll('.tab-content');
+    const exportBtn = document.getElementById('export-data');
+    const resetBtn = document.getElementById('reset-stats');
+    const apodViewBtn = document.getElementById('apod-view');
+    const apodModal = document.getElementById('apod-modal');
+    const apodModalClose = document.getElementById('apod-modal-close');
+    
+    let panelOpen = false;
+    let updateIntervals = [];
+    
+    // Open panel
+    btn.addEventListener('click', () => {
+        panel.classList.add('open');
+        panelOpen = true;
+        btn.style.display = 'none';
+        updateDashboard();
+        startUpdates();
+        // Reinitialize icons in panel
+        if (typeof lucide !== 'undefined') {
+            lucide.createIcons();
+        }
+    });
+    
+    // Close panel
+    closeBtn.addEventListener('click', closePanel);
+    minimizeBtn.addEventListener('click', closePanel);
+    
+    function closePanel() {
+        panel.classList.remove('open');
+        panelOpen = false;
+        btn.style.display = 'flex';
+        stopUpdates();
+    }
+    
+    // Tab switching
+    tabs.forEach(tab => {
+        tab.addEventListener('click', () => {
+            const tabName = tab.dataset.tab;
+            
+            tabs.forEach(t => t.classList.remove('active'));
+            tabContents.forEach(c => c.classList.remove('active'));
+            
+            tab.classList.add('active');
+            document.getElementById('tab-' + tabName).classList.add('active');
+            
+            if (tabName === 'space') {
+                loadSpaceData();
+            }
+        });
+    });
+    
+    // Export data
+    exportBtn.addEventListener('click', () => {
+        const analytics = getAnalytics();
+        const dataStr = JSON.stringify(analytics, null, 2);
+        const blob = new Blob([dataStr], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = 'portfolio_analytics.json';
+        a.click();
+        URL.revokeObjectURL(url);
+        addActivity('export', 'Analytics data exported');
+    });
+    
+    // Reset stats
+    resetBtn.addEventListener('click', () => {
+        if (confirm('Are you sure you want to reset all analytics? This cannot be undone.')) {
+            localStorage.removeItem(ANALYTICS_KEY);
+            localStorage.removeItem(SPACE_CACHE_KEY);
+            updateDashboard();
+            addActivity('reset', 'Analytics reset');
+        }
+    });
+    
+    // APOD Modal
+    apodViewBtn.addEventListener('click', () => {
+        apodModal.classList.add('open');
+    });
+    
+    apodModalClose.addEventListener('click', () => {
+        apodModal.classList.remove('open');
+    });
+    
+    apodModal.addEventListener('click', (e) => {
+        if (e.target === apodModal) {
+            apodModal.classList.remove('open');
+        }
+    });
+    
+    // Easter egg: typing "mission control" opens panel
+    let typedChars = '';
+    document.addEventListener('keydown', (e) => {
+        typedChars += e.key.toLowerCase();
+        if (typedChars.includes('mission control')) {
+            if (!panelOpen) {
+                btn.click();
+            }
+            typedChars = '';
+            recordEasterEgg(10);
+        }
+        if (typedChars.length > 20) {
+            typedChars = typedChars.slice(-15);
+        }
+    });
+    
+    function startUpdates() {
+        // Update time every second
+        updateIntervals.push(setInterval(updateTimeZones, 1000));
+        // Update dashboard every 30 seconds
+        updateIntervals.push(setInterval(updateDashboard, 30000));
+    }
+    
+    function stopUpdates() {
+        updateIntervals.forEach(interval => clearInterval(interval));
+        updateIntervals = [];
+    }
+}
+
+function updateDashboard() {
+    const analytics = getAnalytics();
+    
+    // Visitor count
+    document.getElementById('visitor-count').textContent = analytics.visits.toLocaleString();
+    
+    // Today's visitors
+    const today = new Date().toISOString().split('T')[0];
+    const todayVisits = analytics.dailyVisits[today] || 0;
+    document.getElementById('today-visitors').textContent = todayVisits;
+    
+    // Average session time
+    if (analytics.sessionTimes.length > 0) {
+        const avgSeconds = Math.round(analytics.sessionTimes.reduce((a, b) => a + b, 0) / analytics.sessionTimes.length);
+        const mins = Math.floor(avgSeconds / 60);
+        const secs = avgSeconds % 60;
+        document.getElementById('avg-session').textContent = mins + 'm ' + secs + 's';
+        document.getElementById('session-progress').style.width = Math.min(avgSeconds / 300 * 100, 100) + '%';
+    }
+    
+    // Section views
+    const totalViews = Object.values(analytics.sectionsViewed).reduce((a, b) => a + b, 0);
+    if (totalViews > 0) {
+        const sectionBars = document.querySelectorAll('.section-bar');
+        sectionBars.forEach(bar => {
+            const sectionName = bar.querySelector('.bar-fill').dataset.section;
+            const views = analytics.sectionsViewed[sectionName] || 0;
+            const percent = Math.round((views / totalViews) * 100);
+            bar.querySelector('.bar-fill').style.width = percent + '%';
+            bar.querySelector('.bar-percent').textContent = percent + '%';
+        });
+    }
+    
+    // Scroll depth
+    const scrollDepth = analytics.maxScrollDepth;
+    document.getElementById('scroll-fill').style.width = scrollDepth + '%';
+    document.getElementById('scroll-rocket').style.left = scrollDepth + '%';
+    document.getElementById('scroll-percent').textContent = scrollDepth + '%';
+    
+    // Scroll messages
+    let scrollMessage = 'Start exploring!';
+    if (scrollDepth >= 100) scrollMessage = 'You reached the stars!';
+    else if (scrollDepth >= 75) scrollMessage = 'Almost to the cosmos!';
+    else if (scrollDepth >= 50) scrollMessage = 'Halfway through the journey!';
+    else if (scrollDepth >= 25) scrollMessage = 'Keep scrolling, explorer!';
+    document.getElementById('scroll-message').textContent = scrollMessage;
+    
+    // Sparkline (last 7 days)
+    updateSparkline(analytics);
+    
+    // Easter eggs
+    updateEasterEggs(analytics);
+    
+    // Activity feed
+    updateActivityFeed(analytics);
+}
+
+function updateSparkline(analytics) {
+    const container = document.getElementById('visitor-sparkline');
+    container.innerHTML = '';
+    
+    const dates = [];
+    for (let i = 6; i >= 0; i--) {
+        const date = new Date();
+        date.setDate(date.getDate() - i);
+        dates.push(date.toISOString().split('T')[0]);
+    }
+    
+    const values = dates.map(d => analytics.dailyVisits[d] || 0);
+    const maxVal = Math.max(...values, 1);
+    
+    values.forEach(val => {
+        const bar = document.createElement('div');
+        bar.className = 'sparkline-bar';
+        bar.style.height = ((val / maxVal) * 100) + '%';
+        container.appendChild(bar);
+    });
+}
+
+function updateEasterEggs(analytics) {
+    const container = document.getElementById('easter-eggs');
+    container.innerHTML = '';
+    
+    const totalEggs = 6;
+    const found = analytics.easterEggsFound || [];
+    
+    for (let i = 1; i <= totalEggs; i++) {
+        const slot = document.createElement('div');
+        slot.className = 'egg-slot' + (found.includes(i) ? ' unlocked' : '');
+        slot.textContent = found.includes(i) ? '!' : '?';
+        slot.title = found.includes(i) ? 'Unlocked!' : 'Secret #' + i;
+        container.appendChild(slot);
+    }
+    
+    document.getElementById('eggs-count').textContent = found.length + ' / ' + totalEggs + ' unlocked';
+}
+
+function updateActivityFeed(analytics) {
+    const container = document.getElementById('activity-list');
+    container.innerHTML = '';
+    
+    const activities = analytics.activityLog.slice(0, 20);
+    
+    if (activities.length === 0) {
+        container.innerHTML = '<div class="activity-item"><div class="activity-content"><div class="activity-text">No activity yet</div></div></div>';
+        return;
+    }
+    
+    activities.forEach(activity => {
+        const item = document.createElement('div');
+        item.className = 'activity-item';
+        
+        const icons = {
+            visit: '^',
+            easter: '!',
+            scroll: 'v',
+            export: '>',
+            reset: 'x'
+        };
+        
+        const timeAgo = getTimeAgo(activity.timestamp);
+        
+        item.innerHTML = 
+            '<div class="activity-icon">' + (icons[activity.type] || '*') + '</div>' +
+            '<div class="activity-content">' +
+                '<div class="activity-text">' + activity.text + '</div>' +
+                '<div class="activity-time">' + timeAgo + '</div>' +
+            '</div>';
+        
+        container.appendChild(item);
+    });
+}
+
+function getTimeAgo(timestamp) {
+    const seconds = Math.floor((Date.now() - timestamp) / 1000);
+    
+    if (seconds < 60) return 'Just now';
+    if (seconds < 3600) return Math.floor(seconds / 60) + ' min ago';
+    if (seconds < 86400) return Math.floor(seconds / 3600) + ' hours ago';
+    return Math.floor(seconds / 86400) + ' days ago';
+}
+
+function updateTimeZones() {
+    const now = new Date();
+    
+    // NPT (Nepal Time - UTC+5:45)
+    const nptOffset = 5 * 60 + 45;
+    const npt = new Date(now.getTime() + (nptOffset + now.getTimezoneOffset()) * 60000);
+    document.getElementById('time-npt').textContent = formatTime(npt);
+    
+    // UTC
+    const utc = new Date(now.getTime() + now.getTimezoneOffset() * 60000);
+    document.getElementById('time-utc').textContent = formatTime(utc);
+    
+    // EST (UTC-5)
+    const estOffset = -5 * 60;
+    const est = new Date(now.getTime() + (estOffset + now.getTimezoneOffset()) * 60000);
+    document.getElementById('time-est').textContent = formatTime(est);
+}
+
+function formatTime(date) {
+    return date.toLocaleTimeString('en-US', { hour12: false });
+}
+
+// Space Data Loading
+async function loadSpaceData() {
+    // Load ISS position
+    loadISSPosition();
+    
+    // Load SpaceX launch
+    loadSpaceXLaunch();
+    
+    // Load NASA APOD
+    loadAPOD();
+    
+    // Load Weather (using a simple approach since we don't have API key)
+    updateWeather();
+}
+
+async function loadISSPosition() {
+    try {
+        const response = await fetch('http://api.open-notify.org/iss-now.json');
+        const data = await response.json();
+        
+        if (data.message === 'success') {
+            document.getElementById('iss-lat').textContent = parseFloat(data.iss_position.latitude).toFixed(4) + ' deg';
+            document.getElementById('iss-lon').textContent = parseFloat(data.iss_position.longitude).toFixed(4) + ' deg';
+        }
+    } catch (error) {
+        console.log('ISS API unavailable');
+        document.getElementById('iss-lat').textContent = 'API unavailable';
+        document.getElementById('iss-lon').textContent = '--';
+    }
+}
+
+async function loadSpaceXLaunch() {
+    const cache = getSpaceCache();
+    const now = Date.now();
+    
+    // Use cache if less than 1 hour old
+    if (cache.launch && cache.launchFetched && (now - cache.launchFetched) < 3600000) {
+        displayLaunchData(cache.launch);
+        return;
+    }
+    
+    try {
+        const response = await fetch('https://api.spacexdata.com/v5/launches/next');
+        const data = await response.json();
+        
+        cache.launch = data;
+        cache.launchFetched = now;
+        saveSpaceCache(cache);
+        
+        displayLaunchData(data);
+    } catch (error) {
+        console.log('SpaceX API unavailable');
+        document.getElementById('launch-name').textContent = 'API unavailable';
+        document.getElementById('launch-countdown').textContent = '--';
+    }
+}
+
+function displayLaunchData(data) {
+    document.getElementById('launch-name').textContent = data.name || 'Unknown Mission';
+    document.getElementById('launch-site').textContent = data.launchpad || '--';
+    
+    if (data.date_unix) {
+        const launchDate = new Date(data.date_unix * 1000);
+        const now = new Date();
+        const diff = launchDate - now;
+        
+        if (diff > 0) {
+            const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+            const hours = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+            const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+            
+            document.getElementById('launch-countdown').textContent = 'T-' + days + 'd ' + hours + 'h ' + mins + 'm';
+            
+            // Progress bar (assume 30 day window)
+            const totalWindow = 30 * 24 * 60 * 60 * 1000;
+            const elapsed = totalWindow - diff;
+            const progress = Math.min((elapsed / totalWindow) * 100, 100);
+            document.getElementById('launch-progress').style.width = Math.max(progress, 0) + '%';
+        } else {
+            document.getElementById('launch-countdown').textContent = 'Launched!';
+            document.getElementById('launch-progress').style.width = '100%';
+        }
+    }
+}
+
+async function loadAPOD() {
+    const cache = getSpaceCache();
+    const today = new Date().toISOString().split('T')[0];
+    
+    // Use cache if from today
+    if (cache.apod && cache.apodDate === today) {
+        displayAPOD(cache.apod);
+        return;
+    }
+    
+    // NASA APOD requires API key - we'll use a demo approach
+    // In production, you'd use your own API key
+    try {
+        const response = await fetch('https://api.nasa.gov/planetary/apod?api_key=DEMO_KEY');
+        const data = await response.json();
+        
+        cache.apod = data;
+        cache.apodDate = today;
+        saveSpaceCache(cache);
+        
+        displayAPOD(data);
+    } catch (error) {
+        console.log('NASA APOD API unavailable');
+        document.getElementById('apod-title').textContent = 'API unavailable';
+    }
+}
+
+function displayAPOD(data) {
+    const imageContainer = document.getElementById('apod-image');
+    
+    if (data.media_type === 'image') {
+        imageContainer.innerHTML = '<img src="' + data.url + '" alt="' + data.title + '">';
+    } else {
+        imageContainer.innerHTML = '<div class="apod-placeholder">Video content</div>';
+    }
+    
+    document.getElementById('apod-title').textContent = data.title || '--';
+    
+    // Modal data
+    document.getElementById('apod-modal-img').src = data.hdurl || data.url;
+    document.getElementById('apod-modal-title').textContent = data.title;
+    document.getElementById('apod-modal-desc').textContent = data.explanation;
+}
+
+function updateWeather() {
+    // Simple static weather display since we don't have API key
+    // In production, you'd use OpenWeather API
+    document.getElementById('weather-temp').textContent = '--';
+    document.getElementById('weather-desc').textContent = 'API key required';
+    document.getElementById('sunrise').textContent = 'Sunrise: ~6:30 AM';
+    document.getElementById('sunset').textContent = 'Sunset: ~5:30 PM';
 }
